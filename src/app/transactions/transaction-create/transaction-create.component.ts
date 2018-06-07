@@ -110,7 +110,7 @@ export class TransactionCreateComponent implements OnInit, OnDestroy {
           this.openSuccessDialog();
         },
         err => {
-          this.error = err.error;
+          this.error = err;
           this.submitted = false;
         }
       );

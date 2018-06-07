@@ -87,6 +87,6 @@ export class TransactionsService {
       }
     }
     return throwError(
-      'Something bad happened; please try again later.');
+      error.error);
   }
 }
