@@ -1,0 +1,54 @@
+<main>
+  <section>
+    <div fxLayout="row" fxLayoutAlign="center center">
+      <div fxLayout="column" fxFlexFill.xs fxFlex.gt-xs="640px">
+        <mat-card>
+          <mat-card-title>
+            <div fxLayout="row" fxLayoutAlign="start center" fxLayoutGap="10px">
+              <span>Login</span>
+              <span fxFlex></span>
+              <a mat-button color="accent" routerLink="/signup">Registration</a>
+            </div>
+
+          </mat-card-title>
+          <mat-card-content>
+            <div fxFlex>
+              <mat-error *ngIf="error" class="pull-sm text-center">{{ error }}</mat-error>
+              <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+                <div fxLayout="row">
+                  <mat-form-field [formGroup]="loginForm" fxFlex>
+                    <input matInput placeholder="Email" formControlName="email" required>
+                    <mat-error *ngIf="email.hasError('email') && !email.hasError('required')">
+                      Please enter a valid email address
+                    </mat-error>
+                    <mat-error *ngIf="email.hasError('required')">
+                      Email is
+                      <strong>required</strong>
+                    </mat-error>
+                  </mat-form-field>
+
+                </div>
+                <div fxLayout="row" class="pad-bottom-md">
+                  <mat-form-field [formGroup]="loginForm" fxFlex>
+                    <input matInput placeholder="Password" type="password" formControlName="password" required>
+                    <mat-error *ngIf="password.hasError('minlength') && !password.hasError('required')">
+                      Password too small
+                    </mat-error>
+                    <mat-error *ngIf="password.hasError('required')">
+                      Password is
+                      <strong>required</strong>
+                    </mat-error>
+                  </mat-form-field>
+                </div>
+                <mat-divider></mat-divider>
+                <div fxLayout="row" class="pad-top-md">
+                  <button mat-raised-button type="submit" color="accent" [disabled]="!loginForm.valid" fxFlex>Login</button>
+                </div>
+              </form>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </section>
+</main>

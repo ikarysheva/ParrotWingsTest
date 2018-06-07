@@ -1,0 +1,46 @@
+<main>
+  <div *ngIf="transactionForm" fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="10px">
+    <div fxLayout="column" fxFlexFill.xs fxFlex.gt-xs="640px">
+      <mat-card>
+        <mat-card-content>
+          <mat-error *ngIf="error" class="pad-sm text-center">{{ error }}</mat-error>
+          <form [formGroup]="transactionForm" (ngSubmit)="onCreateTransaction()">
+            <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="10px">
+              <mat-form-field fxFlex>
+                <input type="text" matInput placeholder="Correspondent Name" formControlName="username" required [matAutocomplete]="auto">
+                <mat-autocomplete #auto="matAutocomplete">
+                  <mat-option *ngFor="let user of filteredUsers | async" [value]="user.name">
+                    {{ user.name }}
+                  </mat-option>
+                </mat-autocomplete>
+                <mat-error *ngIf="username.hasError('required')">
+                  Name is
+                  <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <div fxLayout="row" class="pad-bottom-md">
+              <mat-form-field [formGroup]="transactionForm" fxFlex>
+                <input matInput placeholder="Amount" type="number" formControlName="amount" required>
+                <mat-error *ngIf="amount.hasError('insufficientBalance') && !amount.hasError('required')">
+                  Insufficient funds for transaction
+                </mat-error>
+                <mat-error *ngIf="amount.hasError('required')">
+                  Amount is
+                  <strong>required</strong>
+                </mat-error>
+              </mat-form-field>
+            </div>
+            <mat-divider>
+            </mat-divider>
+            <div fxLayout="row" fxLayoutAlign="center center" fxLayoutGap="20px" class="pad-top-md">
+              <button mat-raised-button type="submit" color="accent" [disabled]="!transactionForm.valid || submitted">Create</button>
+              <button mat-raised-button type="button" (click)="onCancel()">Cancel</button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+  </div>
+</main>
