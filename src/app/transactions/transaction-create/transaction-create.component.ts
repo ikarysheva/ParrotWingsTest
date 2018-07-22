@@ -3,8 +3,8 @@ import { TransactionsService } from '../transactions.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UserService } from '../../core/user.service';
 import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn } from '@angular/forms';
-import { Observable, Subscription } from 'rxjs';
-import { map, startWith, switchMap } from 'rxjs/operators';
+import { Observable, Subscription, Subject } from 'rxjs';
+import { map, startWith, switchMap, pluck, takeUntil, distinctUntilChanged, debounceTime } from 'rxjs/operators';
 import { from } from 'rxjs';
 import { MatDialog } from '@angular/material';
 import { TransactionCompleteComponent } from '../transaction-complete/transaction-complete.component';
@@ -26,9 +26,9 @@ export class TransactionCreateComponent implements OnInit, OnDestroy {
 
   submitted = false;
 
-  private repeatId: number;
+  private transaction: Transaction;
 
-  private balanceSubscription: Subscription;
+  private ngUnsubscribe: Subject<void> = new Subject<void>();
 
 
   constructor(private transactionService: TransactionsService,
@@ -41,14 +41,19 @@ export class TransactionCreateComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.route
       .queryParamMap
-      .pipe(map(params => params.get('repeat') || null))
-      .subscribe(id => {
-        this.repeatId = +id;
+      .pipe(
+        pluck('repeat'),
+        switchMap(repeatId => this.transactionService.getTransactionById(+repeatId))
+      )
+      .subscribe(transaction => {
+        this.transaction = transaction;
         this.initForm();
       });
 
 
-    this.balanceSubscription = this.userService.balaceChanged.subscribe((balance) => {
+    this.userService.balaceChanged.pipe(
+      takeUntil(this.ngUnsubscribe)
+    ).subscribe((balance) => {
       const amount = this.amount;
       if (amount) {
         amount.clearValidators();
@@ -60,14 +65,9 @@ export class TransactionCreateComponent implements OnInit, OnDestroy {
   private initForm() {
     let username = '';
     let amount = '';
-    if (this.repeatId) {
-      this.transactionService.getTransactionById(this.repeatId).then((transaction) => {
-        if (transaction) {
-          username = transaction.username;
-          amount = Math.abs(transaction.amount) + '';
-        }
-        this.createForm(username, amount);
-      });
+    if (this.transaction) {
+      username = this.transaction.username;
+      amount = Math.abs(this.transaction.amount) + '';
     }
     this.createForm(username, amount);
   }
@@ -81,17 +81,21 @@ export class TransactionCreateComponent implements OnInit, OnDestroy {
     this.filteredUsers = this.username.valueChanges
       .pipe(
         startWith(''),
+        distinctUntilChanged(),
+        debounceTime(300),
         switchMap((name) => {
           if (name) {
             return this.filterUsername(name);
           }
           return from([]);
-        })
-      );
+        }),
+        takeUntil(this.ngUnsubscribe),
+    );
   }
 
   ngOnDestroy() {
-    this.balanceSubscription.unsubscribe();
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
 

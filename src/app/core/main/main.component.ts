@@ -3,7 +3,8 @@ import { UserService } from '../user.service';
 import { User } from '../../shared/models/user.model';
 import { AuthService } from '../auth.service';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-main',
@@ -15,19 +16,23 @@ export class MainComponent implements OnInit, OnDestroy {
   userName: string;
   balance: number;
 
-  private balanceSubscription: Subscription;
-  private userSubscription: Subscription;
+  private ngUnsubscribe: Subject<void> = new Subject<void>();
+
 
   constructor(private userService: UserService,
     private authService: AuthService,
     private router: Router) { }
 
   ngOnInit() {
-    this.userSubscription = this.userService.curentUserChanged.subscribe((data: User) => {
+    this.userService.curentUserChanged.pipe(
+      takeUntil(this.ngUnsubscribe)
+    ).subscribe((data: User) => {
       this.userName = data.name;
       this.balance = data.balance;
     });
-    this.balanceSubscription = this.userService.balaceChanged.subscribe((balance: number) => {
+    this.userService.balaceChanged.pipe(
+      takeUntil(this.ngUnsubscribe)
+    ).subscribe((balance: number) => {
       this.balance = balance;
     });
     this.userService.getUserInfo();
@@ -39,10 +44,8 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.balanceSubscription.unsubscribe();
-    this.userSubscription.unsubscribe();
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
-
-
 
 }

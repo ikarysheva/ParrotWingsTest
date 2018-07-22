@@ -17,12 +17,14 @@ export class TransactionListComponent implements OnInit, AfterViewInit, OnDestro
 
   dataSource = new MatTableDataSource<Transaction>([]);
   hasTransactions = true;
+  loading: boolean;
 
   private sortSubscription: Subscription;
 
   displayedColumns = ['date', 'username', 'amount', 'balance', 'repeat'];
 
   @ViewChild(MatSort) sort: MatSort;
+
 
   constructor(private transactionsService: TransactionsService,
     private router: Router,
@@ -31,9 +33,10 @@ export class TransactionListComponent implements OnInit, AfterViewInit, OnDestro
 
   ngOnInit() {
     this.dataSource.sort = this.sort;
+    this.loading = true;
     this.transactionsService.getTransactions()
       .then((transactions: Transaction[]) => {
-
+        this.loading = false;
         this.hasTransactions = transactions.length > 0;
         this.dataSource.data = transactions.slice();
         if (this.sort.active) {
